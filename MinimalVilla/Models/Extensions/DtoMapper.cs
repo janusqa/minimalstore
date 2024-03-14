@@ -15,6 +15,7 @@ namespace MinimalVilla.Models.Extensions
         {
             return new CouponDto
             {
+                Id = coupon.Id,
                 Name = coupon.Name,
                 IsActive = coupon.IsActive,
                 Percent = coupon.Percent,
