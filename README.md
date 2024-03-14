@@ -40,6 +40,10 @@
    8. dotnet new webapi -o [<project-name>]   (Minimal API)
       1. dotnet add package Microsoft.EntityFrameworkCore.InMemory
       2. dotnet add package Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore
+      3. dotnet add package FluentValidation.DependencyInjectionExtensions
+      4. dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore
+      5. dotnet add package Microsoft.EntityFrameworkCore.Sqlite
+      6. dotnet add package Microsoft.EntityFrameworkCore.Tools
    9.  dotnet new mvc -au Individual -uld --output [<foldername/namespace>] --framework net7.0  // ASP.Net core web app mvc
       1. The -au Individual paramater makes it use Individual User accounts. The -uld has it use SQL Server instead of SQLite. 
       2. change connecting string in appsettings.json
