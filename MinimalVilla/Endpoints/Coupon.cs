@@ -12,7 +12,7 @@ namespace MinimalVilla.Endpoints
     {
         public static void ConfigureCouponEndpoints(this WebApplication app)
         {
-            app.MapGet("/api/coupon", GetAll).WithName("GetCoupons").Produces<ApiResponse>(200);
+            app.MapGet("/api/coupon", GetAll).WithName("GetCoupons").Produces<ApiResponse>(200).Produces(401).RequireAuthorization();
 
             app.MapGet("/api/coupon/{id:int}", Get).WithName("GetCoupon").Produces<ApiResponse>(200).Produces(404);
 

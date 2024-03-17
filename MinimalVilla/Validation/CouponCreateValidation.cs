@@ -3,9 +3,9 @@ using MinimalVilla.Models.Dto;
 
 namespace MinimalVilla.Validation
 {
-    public class CreateCouponValidation : AbstractValidator<CouponCreateDto>
+    public class CouponCreateValidation : AbstractValidator<CouponCreateDto>
     {
-        public CreateCouponValidation()
+        public CouponCreateValidation()
         {
             RuleFor(model => model.Name).NotEmpty();
             RuleFor(model => model.Percent).InclusiveBetween(1, 100);

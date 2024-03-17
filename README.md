@@ -1,12 +1,22 @@
 1. Install repo and SDK
-   1. sudo apt update
-   2. sudo apt upgrade
-   3. wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
-   4. sudo dpkg -i packages-microsoft-prod.deb
-   5. rm packages-microsoft-prod.deb
-   6. sudo apt update
-   7. sudo apt upgrade
-   8. sudo apt-get install -y dotnet-sdk-7.0
+   1. ```
+      sudo sh -c "cat > /etc/apt/preferences.d/dotnet <<'EOF'
+      Package: *
+      Pin: "origin packages.microsoft.com"
+      Pin-Priority: 1001
+      EOF"
+      ```
+   2. sudo snap remove dotnet-sdk && sudo apt remove -y 'dotnet*' 'aspnetcore*' 'netstandard*'
+   3. navigate to /etc/profile.d and remove any dotnet* bash files
+   4. reboot
+   5. sudo apt update
+   6. sudo apt upgrade
+   7. wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+   8. sudo dpkg -i packages-microsoft-prod.deb
+   9. rm packages-microsoft-prod.deb
+   10. sudo apt update
+   11. sudo apt upgrade
+   12. sudo apt-get install -y dotnet-sdk-8.0
 
 2. Install C# plugin for vscode
 
