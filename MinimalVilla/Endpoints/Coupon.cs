@@ -5,6 +5,7 @@ using MinimalVilla.Data.UnitOfWork;
 using MinimalVilla.Models.Domain;
 using MinimalVilla.Models.Dto;
 using MinimalVilla.Models.Extensions;
+using MinimalVilla.Utility;
 
 namespace MinimalVilla.Endpoints
 {
@@ -12,15 +13,34 @@ namespace MinimalVilla.Endpoints
     {
         public static void ConfigureCouponEndpoints(this WebApplication app)
         {
-            app.MapGet("/api/coupon", GetAll).WithName("GetCoupons").Produces<ApiResponse>(200).Produces(401).RequireAuthorization();
+            app.MapGet("/api/coupon", GetAll)
+                .WithName("GetCoupons")
+                .Produces<ApiResponse>(200)
+                .Produces(401)
+                .Produces(403)
+                .RequireAuthorization(SD.Role_Admin);
 
-            app.MapGet("/api/coupon/{id:int}", Get).WithName("GetCoupon").Produces<ApiResponse>(200).Produces(404);
+            app.MapGet("/api/coupon/{id:int}", Get)
+                .WithName("GetCoupon")
+                .Produces<ApiResponse>(200)
+                .Produces(404);
 
-            app.MapPost("/api/coupon", Post).WithName("CreateCoupon").Accepts<CouponCreateDto>("application/json").Produces<ApiResponse>(201).Produces(400);
+            app.MapPost("/api/coupon", Post)
+                .WithName("CreateCoupon")
+                .Accepts<CouponCreateDto>("application/json")
+                .Produces<ApiResponse>(201)
+                .Produces(400);
 
-            app.MapPut("/api/coupon", Put).WithName("UpdateCoupon").Accepts<CouponDto>("application/json").Produces<ApiResponse>(200).Produces(404); ;
+            app.MapPut("/api/coupon", Put)
+                .WithName("UpdateCoupon")
+                .Accepts<CouponDto>("application/json")
+                .Produces<ApiResponse>(200)
+                .Produces(404);
 
-            app.MapDelete("/api/coupon/{id:int}", Delete).WithName("DeleteCoupon").Produces(204).Produces(404);
+            app.MapDelete("/api/coupon/{id:int}", Delete)
+                .WithName("DeleteCoupon")
+                .Produces(204)
+                .Produces(404);
         }
 
         private async static Task<IResult> GetAll(ILogger<Program> _logger, IUnitOfWork _uow)
