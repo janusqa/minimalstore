@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using MinimalVilla.Data.UnitOfWork;
@@ -13,6 +14,7 @@ namespace MinimalVilla.Endpoints
     {
         public static void ConfigureCouponEndpoints(this WebApplication app)
         {
+            // One way or authorizing
             app.MapGet("/api/coupon", GetAll)
                 .WithName("GetCoupons")
                 .Produces<ApiResponse>(200)
@@ -22,24 +24,65 @@ namespace MinimalVilla.Endpoints
 
             app.MapGet("/api/coupon/{id:int}", Get)
                 .WithName("GetCoupon")
+                .AddEndpointFilter(async (context, next) =>
+                    {
+                        // Filters example.  We are using a filter here as just another way to do validations
+                        // They are of course capable or other business logic besides validations
+                        var id = context.GetArgument<int>(1); // get argument in position 1. See delegate "Get" below.
+                        if (id == 0)
+                        {
+                            return Results.BadRequest(new ApiResponse { IsSuccess = false, ErrorMessages = ["Invalid Coupon Id"], StatusCode = System.Net.HttpStatusCode.BadRequest });
+                        }
+                        // return await next(context);
+                        // OR
+                        // do something before execution of endpoint
+                        Console.WriteLine("Before 1st filter ");
+                        var result = await next(context);
+                        // do something after execution of endpoint
+                        Console.WriteLine("After 1st filter");
+
+                        return result;
+                    }).AddEndpointFilter(async (context, next) =>
+                    {
+                        Console.WriteLine("Before 2nd filter ");
+                        var result = await next(context);
+                        Console.WriteLine("After 2nd filter");
+
+                        return result;
+                    })
                 .Produces<ApiResponse>(200)
+                .Produces(401)
+                .Produces(403)
                 .Produces(404);
 
             app.MapPost("/api/coupon", Post)
                 .WithName("CreateCoupon")
                 .Accepts<CouponCreateDto>("application/json")
                 .Produces<ApiResponse>(201)
+                .Produces(401)
+                .Produces(403)
                 .Produces(400);
 
             app.MapPut("/api/coupon", Put)
                 .WithName("UpdateCoupon")
                 .Accepts<CouponDto>("application/json")
                 .Produces<ApiResponse>(200)
+                .Produces(401)
+                .Produces(403)
                 .Produces(404);
 
             app.MapDelete("/api/coupon/{id:int}", Delete)
                 .WithName("DeleteCoupon")
                 .Produces(204)
+                .Produces(401)
+                .Produces(403)
+                .Produces(404);
+
+            app.MapGet("/api/coupon/special", Special)
+                .WithName("SpecialCoupon")
+                .Produces(200)
+                .Produces(401)
+                .Produces(403)
                 .Produces(404);
         }
 
@@ -50,6 +93,7 @@ namespace MinimalVilla.Endpoints
             return Results.Ok(new ApiResponse { IsSuccess = true, Result = coupons, StatusCode = System.Net.HttpStatusCode.OK });
         }
 
+        [Authorize]
         private async static Task<IResult> Get(IUnitOfWork _uow, int id)
         {
             var coupon = (await _uow.Coupons.FromSqlAsync($@"SELECT * FROM Coupons WHERE Id = @Id", [new SqliteParameter("Id", id)])).FirstOrDefault()?.ToDto();
@@ -58,6 +102,7 @@ namespace MinimalVilla.Endpoints
                 : Results.NotFound(new ApiResponse { IsSuccess = false, StatusCode = System.Net.HttpStatusCode.NotFound });
         }
 
+        [Authorize(Roles = SD.Role_Admin)]
         private static async Task<IResult> Post(IUnitOfWork _uow, IValidator<CouponCreateDto> _validation, [FromBody] CouponCreateDto newCoupon)
         {
             var validationResult = await _validation.ValidateAsync(newCoupon);
@@ -102,6 +147,7 @@ namespace MinimalVilla.Endpoints
             //return Results.StatusCode(StatusCodes.Status500InternalServerError, new ApiResponse { IsSuccess = false, ErrorMessage = "Internal Server Error" });
         }
 
+        [Authorize(Roles = SD.Role_Admin)]
         private static async Task<IResult> Put(IUnitOfWork _uow, IValidator<CouponDto> _validation, [FromBody] CouponDto coupon)
         {
 
@@ -148,6 +194,7 @@ namespace MinimalVilla.Endpoints
             }
         }
 
+        [Authorize(Roles = SD.Role_Admin)]
         private static async Task<IResult> Delete(IUnitOfWork _uow, int id)
         {
             var rowsAffected = await _uow.Coupons.ExecuteSqlAsync($@"DELETE FROM Coupons WHERE Id = @Id", [new SqliteParameter("Id", id)]);
@@ -159,6 +206,29 @@ namespace MinimalVilla.Endpoints
             {
                 return Results.NotFound();
             }
+        }
+
+        [Authorize(Roles = SD.Role_Admin)]
+        private static async Task<IResult> Special(IUnitOfWork _uow, [AsParameters] CouponRequest req)
+        {
+            req.Logger.Log(LogLevel.Information, "Getting special coupons");
+            var coupons = (await _uow.Coupons.FromSqlAsync($@"
+                SELECT *
+                FROM 
+                    Coupons 
+                WHERE 
+                        @Name is NULL
+                    OR 
+                        Name LIKE '%' || @Name || '%'
+                LIMIT @PageSize 
+                OFFSET @Page;
+            ", [
+                     new SqliteParameter("Name", req.CoupoName ?? (object)DBNull.Value),
+                    new SqliteParameter("PageSize", req.PageSize),
+                    new SqliteParameter("Page", req.Page-1)
+                 ])).Select(c => c.ToDto());
+
+            return Results.Ok(new ApiResponse { IsSuccess = true, Result = coupons, StatusCode = System.Net.HttpStatusCode.OK });
         }
     }
 }

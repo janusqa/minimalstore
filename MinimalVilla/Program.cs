@@ -42,7 +42,7 @@ builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerSche
 
 // Authorization
 builder.Services.AddAuthorizationBuilder()
-  .AddPolicy(SD.Role_Admin, policy =>
+    .AddPolicy(SD.Role_Admin, policy =>
         policy
             .RequireRole("Admin")
     // .RequireClaim("scope", "coupons_getall")
